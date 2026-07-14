@@ -1,6 +1,8 @@
 ---
 // src/layouts/Layout.astro
 import '../styles/global.css';
+import RightMenu from '../components/RightMenu.astro';
+import TopHeader from '../components/TopHeader.astro'; // 1. 上端ヘッダーをインポート
 
 interface Props {
   title: string;
@@ -18,11 +20,13 @@ const { title } = Astro.props;
     <title>{title}</title>
   </head>
   <body class="min-h-screen selection:bg-white/20 selection:text-white">
-    <!-- 
-      1カラムレイアウト（PC時に最大横幅 800px、左右に大きな余白、上下に十分なスペース）
-    -->
+    <!-- 1カラムレイアウト -->
     <main class="max-w-[800px] mx-auto px-6 md:px-12 py-24 md:py-36">
       <slot />
     </main>
+
+    <!-- 2. ヘッダーとメニューを並べます -->
+    <TopHeader />
+    <RightMenu />
   </body>
 </html>

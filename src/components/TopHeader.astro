@@ -1,0 +1,64 @@
+---
+// src/components/TopHeader.astro
+const headerItems = [
+  { href: '#', label: 'Home', icon: '🏠' },
+  { href: '#', label: 'Profile', icon: '👤' },
+  { href: '#', label: 'Development', icon: '🎮' },
+  { href: '#', label: 'Trading', icon: '📝' },
+  { href: '#', label: 'Gallery', icon: '🤖' },
+  { href: '#', label: 'Contact', icon: '⚙' },
+];
+---
+
+<!-- 
+  最上部の検知ラッパー
+  通常時はわずか「高さ16px（h-4）」の透明な帯として画面最上部に配置されています
+-->
+<div id="top-header-wrapper" class="fixed top-0 left-0 w-full h-4 z-50 transition-all duration-300">
+  
+  <!-- スライドダウンするヘッダー本体（Glassmorphism） -->
+  <header 
+    id="top-header" 
+    class="absolute top-0 left-0 w-full h-16 bg-black/10 border-b border-white/5 backdrop-blur-xl transform -translate-y-full transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] flex items-center justify-center space-x-12"
+  >
+    {
+      headerItems.map((item) => (
+        <a 
+          href={item.href} 
+          class="text-xl md:text-2xl opacity-60 hover:opacity-100 hover:scale-110 transition-all duration-300 py-2 px-4 relative group"
+          title={item.label}
+        >
+          {item.icon}
+          {/* 必要に応じて表示されるシンプルなツールチップ */}
+          <span class="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-mono tracking-widest text-neutral-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+            {item.label}
+          </span>
+        </a>
+      ))
+    }
+  </header>
+</div>
+
+<!-- チラつきを防ぐためのスマートなトリガー制御スクリプト -->
+<script>
+  const wrapper = document.getElementById('top-header-wrapper');
+  const header = document.getElementById('top-header');
+
+  if (wrapper && header) {
+    // 画面最上部にマウスが入ったらヘッダーを表示
+    wrapper.addEventListener('mouseenter', () => {
+      header.classList.remove('-translate-y-full');
+      // ヘッダーが表示されている間は、マウス検知領域をヘッダーの高さ（h-16）まで広げます
+      wrapper.classList.remove('h-4');
+      wrapper.classList.add('h-16');
+    });
+
+    // マウスがヘッダーから離れたら非表示
+    wrapper.addEventListener('mouseleave', () => {
+      header.classList.add('-translate-y-full');
+      // 非表示になったら、検知領域を元の狭い状態（h-4）に戻します
+      wrapper.classList.remove('h-16');
+      wrapper.classList.add('h-4');
+    });
+  }
+</script>

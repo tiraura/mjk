@@ -1,0 +1,77 @@
+---
+// src/components/RightMenu.astro
+// 各メニュー項目の定義
+const menuItems = [
+  { href: '#', label: 'Home', icon: '🏠' },
+  { href: '#', label: 'Profile', icon: '👤' },
+  { href: '#', label: 'Development', icon: '💻' },
+  { href: '#', label: 'Trading', icon: '💰' },
+  { href: '#', label: 'Gallery', icon: '📷' },
+  { href: '#', label: 'Contact', icon: '📧' },
+];
+---
+
+<!-- 
+  メニュー全体を包むコンテナ
+  画面右側の領域全体を検知領域にすることで、スムーズなホバー開閉を実現します
+-->
+<div id="right-menu-wrapper" class="fixed right-0 top-0 h-full z-50 flex items-center select-none">
+  
+  <!-- 【1】右端のホバー検知エリア ＆ トリガーボタン(☰) -->
+  <div class="absolute right-0 h-full w-12 flex items-center justify-center cursor-pointer">
+    <button 
+      id="menu-trigger" 
+      class="w-12 h-12 rounded-full bg-white/5 border border-white/10 backdrop-blur-md flex items-center justify-center text-white text-lg transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] hover:bg-white/15 hover:scale-105"
+      aria-label="メニューを開く"
+    >
+      ☰
+    </button>
+  </div>
+
+  <!-- 【2】スライドインするメニュー本体 (Glassmorphism) -->
+  <nav 
+    id="slide-menu" 
+    class="fixed top-0 right-0 h-full w-72 bg-black/30 border-l border-white/5 backdrop-blur-2xl transform translate-x-full transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] flex flex-col justify-center px-8"
+  >
+    <div class="space-y-6">
+      {
+        menuItems.map((item) => (
+          <a 
+            href={item.href} 
+            class="flex items-center space-x-4 px-4 py-3 rounded-2xl text-neutral-300 transition-all duration-300 hover:bg-white/5 hover:text-white group"
+          >
+            <!-- アイコン部分 -->
+            <span class="text-xl transition-transform duration-300 group-hover:scale-110">
+              {item.icon}
+            </span>
+            <!-- テキスト部分（Apple風のシンプル・細身フォント） -->
+            <span class="text-sm font-light tracking-wide">
+              {item.label}
+            </span>
+          </a>
+        ))
+      }
+    </div>
+  </nav>
+</div>
+
+<!-- 【3】軽量なアニメーション制御スクリプト -->
+<script>
+  const wrapper = document.getElementById('right-menu-wrapper');
+  const menu = document.getElementById('slide-menu');
+  const trigger = document.getElementById('menu-trigger');
+
+  if (wrapper && menu && trigger) {
+    // マウスが入ったらメニューを表示し、ボタンを半透明にして奥に引っ込める
+    wrapper.addEventListener('mouseenter', () => {
+      menu.classList.remove('translate-x-full');
+      trigger.classList.add('opacity-0', 'scale-90', 'pointer-events-none');
+    });
+
+    // マウスが離れたらメニューを隠し、ボタンを元に戻す
+    wrapper.addEventListener('mouseleave', () => {
+      menu.classList.add('translate-x-full');
+      trigger.classList.remove('opacity-0', 'scale-90', 'pointer-events-none');
+    });
+  }
+</script>
