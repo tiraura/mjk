@@ -1,0 +1,43 @@
+/* src/styles/global.css */
+@import "tailwindcss";
+
+/* 
+  Markdown（記事内）の見出しやリスト、リンクを
+  シンプルかつ高級感のあるデザインに整える設定
+*/
+article h2 {
+    font-size: 1.75rem;
+    font-weight: 300;
+    /* 細めのウェイトで高級感を出す */
+    color: #ffffff;
+    margin-top: 3rem;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.02em;
+}
+
+article h3 {
+    font-size: 1.5rem;
+    font-weight: 300;
+    color: #ffffff;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    letter-spacing: -0.01em;
+}
+
+article p {
+    margin-bottom: 1.5rem;
+    color: #d1d1d6;
+    /* Apple風の少し柔らかい白 */
+}
+
+/* リンクも極限までシンプルに */
+article a {
+    color: #2997ff;
+    /* Apple風のブルー */
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+}
+
+article a:hover {
+    opacity: 0.8;
+}
