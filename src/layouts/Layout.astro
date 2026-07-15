@@ -3,8 +3,6 @@
 import '../styles/global.css';
 import RightMenu from '../components/RightMenu.astro';
 import TopHeader from '../components/TopHeader.astro';
-
-// 1. ClientRouter をインポートします
 import { ClientRouter } from 'astro:transitions';
 
 interface Props {
@@ -15,19 +13,25 @@ const { title } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="ja" class="bg-[#0b0b0b] text-[#f5f5f7] antialiased">
+<!-- 
+  1. htmlタグに「snap-y snap-mandatory」を追加し、
+     スクロール時に必ず要素の端にぴったりスナップ（吸着）させます。
+-->
+<html lang="ja" class="bg-[#0b0b0b] text-[#f5f5f7] antialiased snap-y snap-mandatory scroll-smooth">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
-    
-    <!-- 2. headタグの中に配置します -->
     <ClientRouter />
   </head>
   <body class="min-h-screen selection:bg-white/20 selection:text-white">
-    <!-- 1カラムレイアウト -->
-    <main class="max-w-[800px] mx-auto px-6 md:px-12 py-24 md:py-36">
+    <!-- 
+      2. 1カラムのレイアウト
+         完璧に画面中央にスナップさせるため、mainタグの上下パディング（py-24など）を外し、
+         左右幅だけを制限します。
+    -->
+    <main class="max-w-[800px] mx-auto px-6 md:px-12">
       <slot />
     </main>
 

@@ -3,26 +3,31 @@
 import Layout from '../layouts/Layout.astro';
 import { getCollection, render } from 'astro:content';
 
-// blogコレクションからすべての記事を取得し、日付が新しい順に並び替えます
 const posts = await getCollection('blog');
 const sortedPosts = posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 ---
 
 <Layout title="一人の人間の活動・思考・作品を体験するサイト">
-  <div class="space-y-40"> <!-- 記事同士の間に圧倒的な余白（静寂さの演出） -->
+  <!-- 
+    space-y-40 は廃止します（各記事が画面いっぱいに広がるため）
+  -->
+  <div>
     {
       sortedPosts.map(async (post) => {
-        // 各記事のコンテンツをレンダリングします
         const { Content } = await render(post);
         
         return (
-          <article class="prose prose-invert max-w-none">
-            {/* 記事タイトル */}
+          /* 
+            各記事を「高さ100%（min-h-screen）」にし、
+            スナップの開始位置（snap-start）に設定します。
+            さらに「flex flex-col justify-center」で、文字数が少なくても
+            記事全体が常に画面の「上下中央」に美しく配置されるようにします。
+          */
+          <article class="min-h-screen snap-start flex flex-col justify-center py-16">
             <h1 class="text-3xl md:text-5xl font-light tracking-tight text-white mb-4 leading-tight">
               {post.data.title}
             </h1>
             
-            {/* 投稿日 */}
             <time class="block text-sm text-neutral-500 mb-12 font-mono">
               {post.data.pubDate.toLocaleDateString('ja-JP', {
                 year: 'numeric',
@@ -31,7 +36,6 @@ const sortedPosts = posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDa
               })}
             </time>
             
-            {/* 本文（Apple風の読みやすいフォントサイズと上品な薄灰色） */}
             <div class="text-neutral-300 leading-[1.8] space-y-8 text-base md:text-lg">
               <Content />
             </div>
