@@ -1,12 +1,13 @@
 ---
 // src/components/RightMenu.astro
 // 各メニュー項目の定義
+// src/components/RightMenu.astro
 const menuItems = [
-  { href: '#', label: 'Home', icon: '🏠' },
-  { href: '#', label: 'Profile', icon: '👤' },
+  { href: '/', label: 'Home', icon: '🏠' },
+  { href: '/profile', label: 'Profile', icon: '👤' },
   { href: '#', label: 'Development', icon: '💻' },
   { href: '#', label: 'Trading', icon: '💰' },
-  { href: '#', label: 'Gallery', icon: '📷' },
+  { href: '/gallery', label: 'Gallery', icon: '📷' },
   { href: '#', label: 'Contact', icon: '📧' },
 ];
 ---
@@ -74,4 +75,24 @@ const menuItems = [
       trigger.classList.remove('opacity-0', 'scale-90', 'pointer-events-none');
     });
   }
+</script>
+<script>
+  // 画面が最初にロードされた時、および切り替わった時（page-load）に毎回実行する
+  document.addEventListener('astro:page-load', () => {
+    const wrapper = document.getElementById('right-menu-wrapper');
+    const menu = document.getElementById('slide-menu');
+    const trigger = document.getElementById('menu-trigger');
+
+    if (wrapper && menu && trigger) {
+      wrapper.addEventListener('mouseenter', () => {
+        menu.classList.remove('translate-x-full');
+        trigger.classList.add('opacity-0', 'scale-90', 'pointer-events-none');
+      });
+
+      wrapper.addEventListener('mouseleave', () => {
+        menu.classList.add('translate-x-full');
+        trigger.classList.remove('opacity-0', 'scale-90', 'pointer-events-none');
+      });
+    }
+  });
 </script>

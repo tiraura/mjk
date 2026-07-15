@@ -1,11 +1,11 @@
 ---
 // src/components/TopHeader.astro
 const headerItems = [
-  { href: '#', label: 'Home', icon: '🏠' },
-  { href: '#', label: 'Profile', icon: '👤' },
+  { href: '/', label: 'Home', icon: '🏠' },
+  { href: '/profile', label: 'Profile', icon: '👤' },
   { href: '#', label: 'Development', icon: '🎮' },
   { href: '#', label: 'Trading', icon: '📝' },
-  { href: '#', label: 'Gallery', icon: '🤖' },
+  { href: '/gallery', label: 'Gallery', icon: '🤖' },
   { href: '#', label: 'Contact', icon: '⚙' },
 ];
 ---
@@ -61,4 +61,26 @@ const headerItems = [
       wrapper.classList.add('h-4');
     });
   }
+</script>
+<!-- src/components/TopHeader.astro の一番下のスクリプト部分 -->
+<script>
+  // 画面が切り替わるたびに毎回実行する
+  document.addEventListener('astro:page-load', () => {
+    const wrapper = document.getElementById('top-header-wrapper');
+    const header = document.getElementById('top-header');
+
+    if (wrapper && header) {
+      wrapper.addEventListener('mouseenter', () => {
+        header.classList.remove('-translate-y-full');
+        wrapper.classList.remove('h-4');
+        wrapper.classList.add('h-16');
+      });
+
+      wrapper.addEventListener('mouseleave', () => {
+        header.classList.add('-translate-y-full');
+        wrapper.classList.remove('h-16');
+        wrapper.classList.add('h-4');
+      });
+    }
+  });
 </script>
