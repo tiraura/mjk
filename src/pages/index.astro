@@ -1,5 +1,4 @@
 ---
-// src/pages/index.astro の該当部分
 import Layout from '../layouts/Layout.astro';
 import { getCollection, render } from 'astro:content';
 
@@ -14,8 +13,7 @@ const sortedPosts = posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDa
         const { Content } = await render(post);
         
         return (
-          <!-- 各記事に固有のID（例: post-first-post）を自動付与 -->
-          <article id={`post-${post.id}`} class="min-h-screen snap-start flex flex-col justify-center py-16">
+          <article id={post.id} class="min-h-screen snap-start flex flex-col justify-center py-16">
             <h1 class="text-3xl md:text-5xl font-light tracking-tight text-white mb-4 leading-tight">
               {post.data.title}
             </h1>
