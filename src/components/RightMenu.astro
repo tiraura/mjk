@@ -2,10 +2,10 @@
 // src/components/RightMenu.astro
 ---
 
-<!-- 右側にそっと浮かぶ、縦型の美しいガラス風コントロールパネル -->
+<!-- 右側に浮かぶ縦型コントロールパネル -->
 <div id="reading-controls" class="fixed right-6 top-1/2 -translate-y-1/2 z-50 flex flex-col space-y-4 bg-white/5 dark:bg-black/20 border border-white/10 backdrop-blur-md rounded-full px-2 py-4 select-none">
   
-  <!-- 【1】サウンドボタン（仮置き） -->
+  <!-- 【1】サウンドボタン（後ほど実装） -->
   <button 
     id="btn-sound" 
     class="w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all duration-300 hover:bg-white/10 active:scale-95"
@@ -14,16 +14,16 @@
     🔇
   </button>
 
-  <!-- 【2】ブックマーク（栞）ボタン（仮置き） -->
+  <!-- 【2】ブックマーク（栞）ボタン -->
   <button 
     id="btn-bookmark" 
-    class="w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all duration-300 hover:bg-white/10 active:scale-95"
-    title="栞を挟む"
+    class="w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all duration-300 hover:bg-white/10 active:scale-95 group relative"
+    title="ここに栞を挟む"
   >
     🔖
   </button>
 
-  <!-- 【3】テーマ切り替えボタン（実装済み） -->
+  <!-- 【3】テーマ切り替えボタン -->
   <button 
     id="btn-theme" 
     class="w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all duration-300 hover:bg-white/10 active:scale-95"
@@ -35,10 +35,9 @@
 
 <script>
   document.addEventListener('astro:page-load', () => {
+    // --- 1. ダーク/ライトモードの処理 ---
     const btnTheme = document.getElementById('btn-theme');
-    
     if (btnTheme) {
-      // 1. 保存されたテーマを適用する（なければダークモードをデフォルトに）
       const savedTheme = localStorage.getItem('theme') || 'dark';
       if (savedTheme === 'dark') {
         document.documentElement.classList.add('dark');
@@ -48,7 +47,6 @@
         btnTheme.textContent = '☀️';
       }
 
-      // 2. ボタンクリック時の処理
       btnTheme.addEventListener('click', () => {
         const isDark = document.documentElement.classList.toggle('dark');
         if (isDark) {
@@ -57,6 +55,59 @@
         } else {
           localStorage.setItem('theme', 'light');
           btnTheme.textContent = '☀️';
+        }
+      });
+    }
+
+    // --- 2. 栞（ブックマーク）の処理 ---
+    const btnBookmark = document.getElementById('btn-bookmark');
+    
+    // トップページにいる場合、保存された栞があれば自動スクロールする
+    if (window.location.pathname === '/') {
+      const savedBookmarkId = localStorage.getItem('novel_bookmark');
+      if (savedBookmarkId) {
+        // 少しだけ遅延させてDOMの描画を待ち、スムーズにジャンプする
+        setTimeout(() => {
+          const targetArticle = document.getElementById(savedBookmarkId);
+          if (targetArticle) {
+            targetArticle.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 300);
+      }
+    }
+
+    if (btnBookmark) {
+      btnBookmark.addEventListener('click', () => {
+        // 画面の中心にもっとも近い <article> タグ（現在のページ・章）を特定する
+        const articles = document.querySelectorAll('article');
+        let closestArticle = null;
+        let minDistance = Infinity;
+
+        articles.forEach((article) => {
+          const rect = article.getBoundingClientRect();
+          const distance = Math.abs(rect.top);
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestArticle = article;
+          }
+        });
+
+        if (closestArticle) {
+          // 各記事にIDがない場合は自動で付与するか、すでにあるIDを利用する
+          let articleId = closestArticle.id;
+          if (!articleId) {
+            articleId = 'article-' + Math.random().toString(36.substring(2, 9));
+            closestArticle.id = articleId;
+          }
+
+          // localStorageに保存
+          localStorage.setItem('novel_bookmark', articleId);
+
+          // 栞が挟まれたことを視覚的に伝えるため、アイコンを一時的に変化させる
+          btnBookmark.textContent = '📍';
+          setTimeout(() => {
+            btnBookmark.textContent = '🔖';
+          }, 1000);
         }
       });
     }
