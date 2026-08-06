@@ -36,8 +36,10 @@
 <!-- 音楽再生用の隠しaudio要素（public/ame.mp3 を指定） -->
 <audio id="bgm-audio" src="/ame.mp3" loop preload="auto"></audio>
 
+<!-- src/components/RightMenu.astro の <script> 部分をこれに差し替えます -->
 <script>
-  document.addEventListener('astro:page-load', () => {
+  // 画面がロードされたときに実行する関数
+  function initReadingControls() {
     // --- 1. ダーク/ライトモードの処理 ---
     const btnTheme = document.getElementById('btn-theme');
     if (btnTheme) {
@@ -50,7 +52,8 @@
         btnTheme.textContent = '☀️';
       }
 
-      btnTheme.addEventListener('click', () => {
+      // 既存のイベント重複を防ぐため、一度属性をクリアしてから登録
+      btnTheme.onclick = () => {
         const isDark = document.documentElement.classList.toggle('dark');
         if (isDark) {
           localStorage.setItem('theme', 'dark');
@@ -59,7 +62,7 @@
           localStorage.setItem('theme', 'light');
           btnTheme.textContent = '☀️';
         }
-      });
+      };
     }
 
     // --- 2. 栞（ブックマーク）の処理 ---
@@ -78,7 +81,7 @@
     }
 
     if (btnBookmark) {
-      btnBookmark.addEventListener('click', () => {
+      btnBookmark.onclick = () => {
         const articles = document.querySelectorAll('article');
         let closestArticle = null;
         let minDistance = Infinity;
@@ -100,13 +103,12 @@
           }
 
           localStorage.setItem('novel_bookmark', articleId);
-
           btnBookmark.textContent = '📍';
           setTimeout(() => {
             btnBookmark.textContent = '🔖';
           }, 1000);
         }
-      });
+      };
     }
 
     // --- 3. サウンド（MP3ファイル再生）の処理 ---
@@ -120,26 +122,28 @@
         audio.play().then(() => {
           btnSound.textContent = '🔊';
         }).catch(() => {
-          // ブラウザの自動再生ブロック対策
           btnSound.textContent = '🔇';
           localStorage.setItem('novel_sound', 'off');
         });
       }
 
-      btnSound.addEventListener('click', () => {
+      btnSound.onclick = () => {
         if (audio.paused) {
           audio.play().then(() => {
             btnSound.textContent = '🔊';
             localStorage.setItem('novel_sound', 'on');
           }).catch((err) => {
-            console.log("再生がブロックされました:", err);
+            console.log("再生エラー:", err);
           });
         } else {
           audio.pause();
           btnSound.textContent = '🔇';
           localStorage.setItem('novel_sound', 'off');
         }
-      });
+      };
     }
-  });
+  }
+
+  // Astroのページ遷移ライフサイクルに合わせて実行
+  document.addEventListener('astro:page-load', initReadingControls);
 </script>
