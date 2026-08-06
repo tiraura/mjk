@@ -2,148 +2,79 @@
 // src/components/RightMenu.astro
 ---
 
-<!-- 右側に浮かぶ縦型コントロールパネル -->
-<div id="reading-controls" class="fixed right-6 top-1/2 -translate-y-1/2 z-50 flex flex-col space-y-4 bg-white/5 dark:bg-black/20 border border-white/10 backdrop-blur-md rounded-full px-2 py-4 select-none">
+<!-- 右端のコントロールパネル -->
+<div class="fixed right-6 top-1/2 -translate-y-1/2 z-50 flex flex-col space-y-4 bg-white/5 dark:bg-black/20 border border-white/10 backdrop-blur-md rounded-full px-2 py-4 select-none">
   
-  <!-- 【1】サウンドボタン -->
+  <!-- サウンドボタン -->
   <button 
     id="btn-sound" 
-    class="w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all duration-300 hover:bg-white/10 active:scale-95"
-    title="BGM ON/OFF"
+    type="button"
+    class="w-10 h-10 rounded-full flex items-center justify-center text-lg text-white transition-all duration-300 hover:bg-white/10 cursor-pointer"
   >
     🔇
   </button>
 
-  <!-- 【2】ブックマーク（栞）ボタン -->
+  <!-- ブックマーク（栞）ボタン -->
   <button 
     id="btn-bookmark" 
-    class="w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all duration-300 hover:bg-white/10 active:scale-95 group relative"
-    title="ここに栞を挟む"
+    type="button"
+    class="w-10 h-10 rounded-full flex items-center justify-center text-lg text-white transition-all duration-300 hover:bg-white/10 cursor-pointer"
   >
     🔖
   </button>
 
-  <!-- 【3】テーマ切り替えボタン -->
+  <!-- テーマ切り替えボタン -->
   <button 
     id="btn-theme" 
-    class="w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all duration-300 hover:bg-white/10 active:scale-95"
-    title="ダーク/ライトモード切り替え"
+    type="button"
+    class="w-10 h-10 rounded-full flex items-center justify-center text-lg text-white transition-all duration-300 hover:bg-white/10 cursor-pointer"
   >
     🌙
   </button>
 </div>
 
-<!-- 音楽再生用の隠しaudio要素（public/ame.mp3 を指定） -->
+<!-- 音声ファイル -->
 <audio id="bgm-audio" src="/ame.mp3" loop preload="auto"></audio>
 
-<!-- src/components/RightMenu.astro の <script> 部分をこれに差し替えます -->
 <script>
-  // 画面がロードされたときに実行する関数
-  function initReadingControls() {
-    // --- 1. ダーク/ライトモードの処理 ---
-    const btnTheme = document.getElementById('btn-theme');
-    if (btnTheme) {
-      const savedTheme = localStorage.getItem('theme') || 'dark';
-      if (savedTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-        btnTheme.textContent = '🌙';
-      } else {
-        document.documentElement.classList.remove('dark');
-        btnTheme.textContent = '☀️';
-      }
+  function setupControls() {
+    console.log("コントローラーのセットアップを実行中..."); // 動作確認用のログ
 
-      // 既存のイベント重複を防ぐため、一度属性をクリアしてから登録
-      btnTheme.onclick = () => {
-        const isDark = document.documentElement.classList.toggle('dark');
-        if (isDark) {
-          localStorage.setItem('theme', 'dark');
-          btnTheme.textContent = '🌙';
-        } else {
-          localStorage.setItem('theme', 'light');
-          btnTheme.textContent = '☀️';
-        }
-      };
-    }
-
-    // --- 2. 栞（ブックマーク）の処理 ---
-    const btnBookmark = document.getElementById('btn-bookmark');
-    
-    if (window.location.pathname === '/') {
-      const savedBookmarkId = localStorage.getItem('novel_bookmark');
-      if (savedBookmarkId) {
-        setTimeout(() => {
-          const targetArticle = document.getElementById(savedBookmarkId);
-          if (targetArticle) {
-            targetArticle.scrollIntoView({ behavior: 'smooth' });
-          }
-        }, 300);
-      }
-    }
-
-    if (btnBookmark) {
-      btnBookmark.onclick = () => {
-        const articles = document.querySelectorAll('article');
-        let closestArticle = null;
-        let minDistance = Infinity;
-
-        articles.forEach((article) => {
-          const rect = article.getBoundingClientRect();
-          const distance = Math.abs(rect.top);
-          if (distance < minDistance) {
-            minDistance = distance;
-            closestArticle = article;
-          }
-        });
-
-        if (closestArticle) {
-          let articleId = closestArticle.id;
-          if (!articleId) {
-            articleId = 'article-' + Math.random().toString(36).substring(2, 9);
-            closestArticle.id = articleId;
-          }
-
-          localStorage.setItem('novel_bookmark', articleId);
-          btnBookmark.textContent = '📍';
-          setTimeout(() => {
-            btnBookmark.textContent = '🔖';
-          }, 1000);
-        }
-      };
-    }
-
-    // --- 3. サウンド（MP3ファイル再生）の処理 ---
-    const btnSound = document.getElementById('btn-sound') as HTMLButtonElement;
+    // 1. サウンド
+    const btnSound = document.getElementById('btn-sound');
     const audio = document.getElementById('bgm-audio') as HTMLAudioElement;
 
     if (btnSound && audio) {
-      // 保持されている状態を反映
-      const savedSoundState = localStorage.getItem('novel_sound') === 'on';
-      if (savedSoundState) {
-        audio.play().then(() => {
-          btnSound.textContent = '🔊';
-        }).catch(() => {
-          btnSound.textContent = '🔇';
-          localStorage.setItem('novel_sound', 'off');
-        });
-      }
-
       btnSound.onclick = () => {
+        console.log("サウンドボタンが押されました");
         if (audio.paused) {
           audio.play().then(() => {
             btnSound.textContent = '🔊';
-            localStorage.setItem('novel_sound', 'on');
-          }).catch((err) => {
-            console.log("再生エラー:", err);
-          });
+          }).catch(err => console.log("再生失敗:", err));
         } else {
           audio.pause();
           btnSound.textContent = '🔇';
-          localStorage.setItem('novel_sound', 'off');
         }
+      };
+    }
+
+    // 2. テーマ切り替え
+    const btnTheme = document.getElementById('btn-theme');
+    if (btnTheme) {
+      btnTheme.onclick = () => {
+        console.log("テーマボタンが押されました");
+        const isDark = document.documentElement.classList.toggle('dark');
+        btnTheme.textContent = isDark ? '🌙' : '☀️';
       };
     }
   }
 
-  // Astroのページ遷移ライフサイクルに合わせて実行
-  document.addEventListener('astro:page-load', initReadingControls);
+  // ページ読み込み時に実行
+  document.addEventListener('astro:page-load', setupControls);
+  // 万が一のための通常ロード時実行
+  if (document.readyState === 'complete') {
+    setupControls();
+  } else {
+    window.addEventListener('load', setupControls);
+  }
 </script>
