@@ -2,76 +2,191 @@
 // src/components/RightMenu.astro
 ---
 
-<!-- 右端のコントロールパネル -->
-<div class="fixed right-6 top-1/2 -translate-y-1/2 z-50 flex flex-col space-y-4 bg-white/5 dark:bg-black/20 border border-white/10 backdrop-blur-md rounded-full px-2 py-4 select-none">
-  
-  <!-- サウンドボタン -->
-  <button 
-    id="btn-sound" 
-    type="button"
-    class="w-10 h-10 rounded-full flex items-center justify-center text-lg text-white transition-all duration-300 hover:bg-white/10 cursor-pointer"
-  >
-    🔇
-  </button>
-
-  <!-- ブックマーク（栞）ボタン -->
-  <button 
-    id="btn-bookmark" 
-    type="button"
-    class="w-10 h-10 rounded-full flex items-center justify-center text-lg text-white transition-all duration-300 hover:bg-white/10 cursor-pointer"
-  >
-    🔖
-  </button>
-
-  <!-- テーマ切り替えボタン -->
-  <button 
-    id="btn-theme" 
-    type="button"
-    class="w-10 h-10 rounded-full flex items-center justify-center text-lg text-white transition-all duration-300 hover:bg-white/10 cursor-pointer"
-  >
-    🌙
-  </button>
+<!-- 右側の縦型コントロールパネル -->
+<div class="fixed right-6 top-1/2 -translate-y-1/2 z-50 flex flex-col space-y-3 bg-white/5 dark:bg-black/20 border border-white/10 backdrop-blur-md rounded-full px-2 py-4 select-none">
+  <!-- 文字を大きくする -->
+  <button id="btn-font-larger" type="button" class="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-white transition-all duration-300 hover:bg-white/10 cursor-pointer" title="文字を大きくする">A+</button>
+  <!-- 文字を小さくする -->
+  <button id="btn-font-smaller" type="button" class="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-white transition-all duration-300 hover:bg-white/10 cursor-pointer" title="文字を小さくする">A-</button>
+  <!-- サウンド切替 -->
+  <button id="btn-sound" type="button" class="w-10 h-10 rounded-full flex items-center justify-center text-lg text-white transition-all duration-300 hover:bg-white/10 cursor-pointer" title="BGM ON/OFF">🔇</button>
+  <!-- 栞（ブックマーク） -->
+  <button id="btn-bookmark" type="button" class="w-10 h-10 rounded-full flex items-center justify-center text-lg text-white transition-all duration-300 hover:bg-white/10 cursor-pointer" title="ここに栞を挟む">🔖</button>
+  <!-- ダーク/ライトモード切替 -->
+  <button id="btn-theme" type="button" class="w-10 h-10 rounded-full flex items-center justify-center text-lg text-white transition-all duration-300 hover:bg-white/10 cursor-pointer" title="ダーク/ライトモード切り替え">🌙</button>
 </div>
 
-<!-- 音声ファイル -->
-<audio id="bgm-audio" src="/ame.mp3" loop preload="auto"></audio>
+<audio id="bgm-audio" loop preload="auto"></audio>
 
 <script>
-  function setupControls() {
-    console.log("コントローラーのセットアップを実行中..."); // 動作確認用のログ
+  // 💡【重要】ページが読み込まれた瞬間、URLにハッシュ（#id）が無ければ、
+  // localStorageに保存されている前回の栞IDをURLの末尾に自動で付与する。
+  // これにより、ブラウザの標準機能で最初からその位置が一発表示される。
+  if (window.location.pathname === '/' && !window.location.hash) {
+    const savedBookmarkId = localStorage.getItem('novel_bookmark');
+    if (savedBookmarkId) {
+      history.replaceState(null, '', '#' + savedBookmarkId);
+    }
+  }
 
-    // 1. サウンド
+  function setupControls() {
+    // --- 0. フォントサイズ変更 ---
+    const btnLarger = document.getElementById('btn-font-larger');
+    const btnSmaller = document.getElementById('btn-font-smaller');
+    const fontSizes = [0.95, 1.05, 1.125, 1.25, 1.4, 1.6]; 
+    let currentSizeIndex = parseInt(localStorage.getItem('novel_font_index') || '2');
+
+    function applyFontSize(index: number) {
+      if (index < 0) index = 0;
+      if (index >= fontSizes.length) index = fontSizes.length - 1;
+      currentSizeIndex = index;
+      document.documentElement.style.setProperty('--novel-font-size', fontSizes[currentSizeIndex] + 'rem');
+      localStorage.setItem('novel_font_index', currentSizeIndex.toString());
+    }
+    applyFontSize(currentSizeIndex);
+
+    if (btnLarger) btnLarger.onclick = () => applyFontSize(currentSizeIndex + 1);
+    if (btnSmaller) btnSmaller.onclick = () => applyFontSize(currentSizeIndex - 1);
+
+    // --- 1. サウンド & 章ごとの自動切り替え ---
     const btnSound = document.getElementById('btn-sound');
     const audio = document.getElementById('bgm-audio') as HTMLAudioElement;
+    let currentPlayingSound = '';
 
     if (btnSound && audio) {
+      const savedSoundState = localStorage.getItem('novel_sound') === 'on';
+      
+      const updateActiveSound = () => {
+        const articles = document.querySelectorAll('article');
+        let activeArticle: HTMLElement | null = null;
+        const windowCenter = window.innerHeight / 2;
+
+        articles.forEach((article) => {
+          const rect = article.getBoundingClientRect();
+          if (rect.top <= windowCenter && rect.bottom >= windowCenter) {
+            activeArticle = article as HTMLElement;
+          }
+        });
+
+        if (activeArticle) {
+          const soundFile = (activeArticle as HTMLElement).getAttribute('data-sound');
+          if (soundFile && soundFile !== currentPlayingSound) {
+            currentPlayingSound = soundFile;
+            audio.src = soundFile;
+            if (savedSoundState || localStorage.getItem('novel_sound') === 'on') {
+              audio.play().catch(err => console.log("自動再生待機中:", err));
+            }
+          } else if (!soundFile && currentPlayingSound) {
+            currentPlayingSound = '';
+            audio.pause();
+            audio.src = '';
+          }
+        }
+      };
+
+      window.addEventListener('scroll', () => {
+        updateActiveSound();
+      });
+
+      setTimeout(updateActiveSound, 500);
+
+      if (savedSoundState) {
+        audio.play().then(() => {
+          btnSound.textContent = '🔊';
+        }).catch(() => {
+          btnSound.textContent = '🔇';
+          localStorage.setItem('novel_sound', 'off');
+        });
+      }
+
       btnSound.onclick = () => {
-        console.log("サウンドボタンが押されました");
         if (audio.paused) {
+          updateActiveSound();
           audio.play().then(() => {
             btnSound.textContent = '🔊';
+            localStorage.setItem('novel_sound', 'on');
           }).catch(err => console.log("再生失敗:", err));
         } else {
           audio.pause();
           btnSound.textContent = '🔇';
+          localStorage.setItem('novel_sound', 'off');
         }
       };
     }
 
-    // 2. テーマ切り替え
+    // --- 2. 栞（ブックマーク）登録処理［URLハッシュ連動版］ ---
+    const btnBookmark = document.getElementById('btn-bookmark');
+    if (btnBookmark) {
+      btnBookmark.onclick = () => {
+        const articles = document.querySelectorAll('article');
+        let closestArticle: HTMLElement | null = null;
+        let minDistance = Infinity;
+
+        articles.forEach((article) => {
+          const rect = article.getBoundingClientRect();
+          const distance = Math.abs(rect.top);
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestArticle = article as HTMLElement;
+          }
+        });
+
+        if (closestArticle) {
+          let articleId = closestArticle.id;
+          if (!articleId) {
+            articleId = 'article-' + Math.random().toString(36).substring(2, 9);
+            closestArticle.id = articleId;
+          }
+          
+          // localStorageへの保存と、URL（ハッシュ）の書き換えを同時に行う
+          localStorage.setItem('novel_bookmark', articleId);
+          history.replaceState(null, '', '#' + articleId);
+
+          btnBookmark.textContent = '📍';
+          setTimeout(() => { btnBookmark.textContent = '🔖'; }, 1000);
+        }
+      };
+    }
+
+    // --- 3. テーマ切り替え ---
     const btnTheme = document.getElementById('btn-theme');
     if (btnTheme) {
+      btnTheme.textContent = document.documentElement.classList.contains('dark') ? '🌙' : '☀️';
       btnTheme.onclick = () => {
-        console.log("テーマボタンが押されました");
         const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
         btnTheme.textContent = isDark ? '🌙' : '☀️';
       };
     }
+
+    // --- 4. スクロール連動のフェードイン演出 ---
+    const novelPages = document.querySelectorAll('.novel-page');
+    
+    const observerCallback: IntersectionObserverCallback = (entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+        }
+      });
+    };
+
+    const observerOptions: IntersectionObserverInit = {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.1, 
+    };
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+    
+    novelPages.forEach((page, index) => {
+      observer.observe(page);
+      if (index === 0) {
+        page.classList.add('is-visible');
+      }
+    });
   }
 
-  // ページ読み込み時に実行
   document.addEventListener('astro:page-load', setupControls);
-  // 万が一のための通常ロード時実行
   if (document.readyState === 'complete') {
     setupControls();
   } else {

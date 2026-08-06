@@ -37,3 +37,65 @@ article p {
     color: var(--color-text-muted) !important;
     transition: color 0.5s ease;
 }
+
+/* src/styles/global.css の末尾に追記 */
+
+/* 読書用フォントサイズのベース（JavaScriptからこの変数を書き換えます） */
+article .text-base,
+article .text-lg,
+article div {
+    font-size: var(--novel-font-size, 1.125rem);
+    /* デフォルトは1.125rem（約18px） */
+    line-height: 2.0;
+    /* 小説が読みやすいように行間も少し広めに */
+}
+
+/* src/styles/global.css の末尾に追記 */
+
+/* スクロールバーを完全に非表示にする（機能は維持する） */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    /* IE, Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+/* src/styles/global.css の末尾に追記 */
+
+/* ページ全体のスクロールバーを非表示にする（機能はそのまま） */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    display: none;
+}
+
+html,
+body {
+    -ms-overflow-style: none;
+    /* IE, Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+/* src/styles/global.css の末尾（Novel-pageの部分）をこれに置き換えます */
+
+/* 初期状態を強制的に見えなくするのではなく、安全なトランジション設定にする */
+.novel-page {
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* まだ画面に入っていない時は少し下で薄い状態 */
+.novel-page:not(.is-visible) {
+    opacity: 0.2;
+    transform: translateY(15px);
+}
+
+/* 画面内に入ってきたらクッキリ表示 */
+.novel-page.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}

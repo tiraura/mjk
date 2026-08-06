@@ -13,10 +13,6 @@ const { title } = Astro.props;
 ---
 
 <!doctype html>
-<!-- 
-  1. htmlタグに「snap-y snap-mandatory」を追加し、
-     スクロール時に必ず要素の端にぴったりスナップ（吸着）させます。
--->
 <html lang="ja" class="antialiased snap-y snap-mandatory scroll-smooth">
   <head>
     <meta charset="UTF-8" />
@@ -24,13 +20,20 @@ const { title } = Astro.props;
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
     <ClientRouter />
+
+    <!-- 💡 【超重要】画面が描画される前にlocalStorageを確認し、デフォルトでダークモードを適用するスクリプト -->
+    <script is:inline>
+      const savedTheme = localStorage.getItem('theme');
+      // 保存データがない初回アクセス時は、強制的に「dark」をデフォルトにする
+      if (!savedTheme || savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    </script>
   </head>
   <body class="min-h-screen selection:bg-white/20 selection:text-white">
-    <!-- 
-      2. 1カラムのレイアウト
-         完璧に画面中央にスナップさせるため、mainタグの上下パディング（py-24など）を外し、
-         左右幅だけを制限します。
-    -->
     <main class="max-w-[800px] mx-auto px-6 md:px-12">
       <slot />
     </main>
