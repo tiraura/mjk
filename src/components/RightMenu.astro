@@ -5,11 +5,11 @@
 <!-- 右側に浮かぶ縦型コントロールパネル -->
 <div id="reading-controls" class="fixed right-6 top-1/2 -translate-y-1/2 z-50 flex flex-col space-y-4 bg-white/5 dark:bg-black/20 border border-white/10 backdrop-blur-md rounded-full px-2 py-4 select-none">
   
-  <!-- 【1】サウンドボタン（後ほど実装） -->
+  <!-- 【1】サウンドボタン -->
   <button 
     id="btn-sound" 
     class="w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all duration-300 hover:bg-white/10 active:scale-95"
-    title="サウンド ON/OFF"
+    title="環境音 ON/OFF"
   >
     🔇
   </button>
@@ -62,11 +62,9 @@
     // --- 2. 栞（ブックマーク）の処理 ---
     const btnBookmark = document.getElementById('btn-bookmark');
     
-    // トップページにいる場合、保存された栞があれば自動スクロールする
     if (window.location.pathname === '/') {
       const savedBookmarkId = localStorage.getItem('novel_bookmark');
       if (savedBookmarkId) {
-        // 少しだけ遅延させてDOMの描画を待ち、スムーズにジャンプする
         setTimeout(() => {
           const targetArticle = document.getElementById(savedBookmarkId);
           if (targetArticle) {
@@ -78,7 +76,6 @@
 
     if (btnBookmark) {
       btnBookmark.addEventListener('click', () => {
-        // 画面の中心にもっとも近い <article> タグ（現在のページ・章）を特定する
         const articles = document.querySelectorAll('article');
         let closestArticle = null;
         let minDistance = Infinity;
@@ -93,23 +90,116 @@
         });
 
         if (closestArticle) {
-          // 各記事にIDがない場合は自動で付与するか、すでにあるIDを利用する
           let articleId = closestArticle.id;
           if (!articleId) {
-            articleId = 'article-' + Math.random().toString(36.substring(2, 9));
+            articleId = 'article-' + Math.random().toString(36).substring(2, 9);
             closestArticle.id = articleId;
           }
 
-          // localStorageに保存
           localStorage.setItem('novel_bookmark', articleId);
 
-          // 栞が挟まれたことを視覚的に伝えるため、アイコンを一時的に変化させる
           btnBookmark.textContent = '📍';
           setTimeout(() => {
             btnBookmark.textContent = '🔖';
           }, 1000);
         }
       });
+    }
+
+    // --- 3. サウンド（環境音生成）の処理 ---
+    const btnSound = document.getElementById('btn-sound');
+    let audioCtx = null;
+    let noiseNode = null;
+    let gainNode = null;
+    let isPlaying = false;
+
+    if (btnSound) {
+      // 状態の復元
+      const savedSound = localStorage.getItem('novel_sound') === 'on';
+      if (savedSound) {
+        // 注: ブラウザのセキュリティポリシーにより、自動再生は制限される場合があるため
+        // ここではアイコンの見た目だけを合わせ、実際の再生はユーザーのクリックをトリガーにします
+        btnSound.textContent = '🔊';
+        isPlaying = true;
+        startAmbientSound(true); // 自動再生を試みる（ブロックされた場合は無音になります）
+      }
+
+      btnSound.addEventListener('click', () => {
+        if (!isPlaying) {
+          // サウンド再生開始
+          startAmbientSound(false);
+          isPlaying = true;
+          btnSound.textContent = '🔊';
+          localStorage.setItem('novel_sound', 'on');
+        } else {
+          // サウンド停止
+          stopAmbientSound();
+          isPlaying = false;
+          btnSound.textContent = '🔇';
+          localStorage.setItem('novel_sound', 'off');
+        }
+      });
+    }
+
+    function startAmbientSound(isMutedStart = false) {
+      try {
+        if (!audioCtx) {
+          // Web Audio APIのコンテキスト作成
+          const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+          audioCtx = new AudioContext();
+        }
+
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+
+        // すでに鳴っている場合は一度止める
+        if (noiseNode) {
+          stopAmbientSound();
+        }
+
+        // ホワイトノイズ（雨や風のような音のベース）を生成
+        const bufferSize = 2 * audioCtx.sampleRate;
+        const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          output[i] = Math.random() * 2 - 1;
+        }
+
+        noiseNode = audioCtx.createBufferSource();
+        noiseNode.buffer = noiseBuffer;
+        noiseNode.loop = true;
+
+        // フィルターをかけて、耳障りな高音を削り「低くこもった穏やかな環境音」にする
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 350; // 周波数を下げて心地よいこもり音に
+
+        // 音量（ゲイン）の調整
+        gainNode = audioCtx.createGain();
+        gainNode.gain.value = isMutedStart ? 0 : 0.05; // 音量は控えめに優しく
+
+        // 接続: ノイズ源 ➔ フィルター ➔ 音量 ➔ スピーカー
+        noiseNode.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        noiseNode.start(0);
+      } catch (e) {
+        console.log('Audio context not allowed yet', e);
+      }
+    }
+
+    function stopAmbientSound() {
+      if (noiseNode) {
+        try {
+          noiseNode.stop();
+          noiseNode.disconnect();
+        } catch (e) {
+          // すでに停止している場合のエラー対策
+        }
+        noiseNode = null;
+      }
     }
   });
 </script>
